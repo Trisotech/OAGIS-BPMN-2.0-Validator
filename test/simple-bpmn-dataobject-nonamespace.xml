@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>
+	<itemDefinition id="DebitTransferItem" structureRef="oagis:DebitTransfer"/>
+	<process isExecutable="false" id="WFP">
+		<dataObject name="OAGIS:[DebitTransfer]" id="_1373552137499" itemSubjectRef="process:DebitTransferItem"/>						
+	</process>
+</definitions>

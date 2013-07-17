@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OAGIS BPMN 2.0 Validator</title>
+	<link href="http://code.jquery.com/qunit/qunit-git.css" rel="stylesheet">
+  </head>
+  <body>
+	<div id="qunit"></div>
+	<div id="qunit-fixture"></div>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+	<script src="../js/oagis-bpmn-validator.js"></script>
+	<script src="http://code.jquery.com/qunit/qunit-1.12.0.js"></script>
+	<script type="text/javascript">
+		var validator;
+		module('Simple BPMN 2.0 XML', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:itemDefinition id="AcknowledgeDebitTransferItem" structureRef="oagis:AcknowledgeDebitTransfer"/>' +
+						'<semantic:message name="OAGIS:[Acknowledge][DebitTransfer]" id="_1373552137499" itemRef="process:AcknowledgeDebitTransferItem"/>' +
+						'<semantic:collaboration id="C1373552137507">' +
+							'<semantic:participant name="From" id="_b550f52a-28c4-4546-aadd-3e40cb8a2e71"/>' +
+							'<semantic:participant name="To" id="_1173de42-394d-4480-8204-c884675b5fd9"/>' +
+							'<semantic:messageFlow messageRef="process:_1373552137499" name="Acknowledge Debit Transfer " sourceRef="_b550f52a-28c4-4546-aadd-3e40cb8a2e71" targetRef="_1173de42-394d-4480-8204-c884675b5fd9" id="_c9d253d8-c69c-47c3-9d64-7e9deeaf6654"/>' +
+						'</semantic:collaboration>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		
+		test("Namespaces", function() {
+			equal(validator.namespaceURL('semantic'), 'http://www.omg.org/spec/BPMN/20100524/MODEL');
+			equal(validator.namespaceURL('process'), 'http://www.trisotech.com/definitions/_1373552137482');
+			equal(validator.namespaceURL('oagis'), 'http://www.openapplications.org/oagis/9');
+		});
+
+		test("Results", function(){
+			validator.validate();
+
+			ok(validator.result.items['AcknowledgeDebitTransferItem']);
+			ok(validator.result.items['AcknowledgeDebitTransferItem'].oagis);
+			ok(validator.result.items['AcknowledgeDebitTransferItem'].valid);
+			equal(validator.result.items['AcknowledgeDebitTransferItem'].type, 'bod');
+			equal(validator.result.items['AcknowledgeDebitTransferItem'].element, 'AcknowledgeDebitTransfer');
+
+			ok(validator.result.messages['_1373552137499']);
+			ok(validator.result.messages['_1373552137499'].oagis);
+			ok(validator.result.messages['_1373552137499'].defined);
+			ok(validator.result.messages['_1373552137499'].valid);
+			equal(validator.result.messages['_1373552137499'].item, validator.result.items['AcknowledgeDebitTransferItem']);
+			
+		});
+		
+		module('Non Existing BOD', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="NonExistingBod" structureRef="oagis:NonExistingBod"/>' +
+						'<semantic:message name="Not sure of the name" id="_1373552137499" itemRef="process:NonExistingBod"/>' +
+						'<semantic:collaboration id="C1373552137507">' +
+							'<semantic:participant name="From" id="_b550f52a-28c4-4546-aadd-3e40cb8a2e71"/>' +
+							'<semantic:participant name="To" id="_1173de42-394d-4480-8204-c884675b5fd9"/>' +
+							'<semantic:messageFlow messageRef="process:_1373552137499" name="Wrong BOD " sourceRef="_b550f52a-28c4-4546-aadd-3e40cb8a2e71" targetRef="_1173de42-394d-4480-8204-c884675b5fd9" id="_c9d253d8-c69c-47c3-9d64-7e9deeaf6654"/>' +
+						'</semantic:collaboration>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['NonExistingBod']);
+			ok(validator.result.items['NonExistingBod'].oagis);
+			ok(!validator.result.items['NonExistingBod'].valid);
+			equal(validator.result.items['NonExistingBod'].type, 'unknown');
+			equal(validator.result.items['NonExistingBod'].element, 'NonExistingBod');
+
+			ok(validator.result.messages['_1373552137499']);
+			ok(validator.result.messages['_1373552137499'].oagis);
+			ok(validator.result.messages['_1373552137499'].defined);
+			ok(!validator.result.messages['_1373552137499'].valid);
+			equal(validator.result.messages['_1373552137499'].item, validator.result.items['NonExistingBod']);
+
+		});
+
+		module('Non OAGIS Message', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:mine="http://www.my.com/xsd/my.xsd" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:import namespace="http://www.my.com/xsd/my.xsd" importType="http://www.w3.org/2001/XMLSchema" location="http://www.my.com/xsd/my.xsd" />' +
+						'<semantic:itemDefinition id="MyMessageStructure" structureRef="mine:Message"/>' +
+						'<semantic:message name="My Message" id="_1373552137499" itemRef="process:MyMessageStructure"/>' +
+						'<semantic:collaboration id="C1373552137507">' +
+							'<semantic:participant name="From" id="_b550f52a-28c4-4546-aadd-3e40cb8a2e71"/>' +
+							'<semantic:participant name="To" id="_1173de42-394d-4480-8204-c884675b5fd9"/>' +
+							'<semantic:messageFlow messageRef="process:_1373552137499" name="My Message " sourceRef="_b550f52a-28c4-4546-aadd-3e40cb8a2e71" targetRef="_1173de42-394d-4480-8204-c884675b5fd9" id="_c9d253d8-c69c-47c3-9d64-7e9deeaf6654"/>' +
+						'</semantic:collaboration>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['MyMessageStructure']);
+			ok(!validator.result.items['MyMessageStructure'].oagis);
+			equal(validator.result.items['MyMessageStructure'].element, 'mine:Message');
+
+
+			ok(validator.result.messages['_1373552137499']);
+			ok(!validator.result.messages['_1373552137499'].oagis);
+			ok(validator.result.messages['_1373552137499'].defined);
+			equal(validator.result.messages['_1373552137499'].item, validator.result.items['MyMessageStructure']);
+		});
+		
+		module('Message bound on OAGIS Noun', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="DebitTransferItem" structureRef="oagis:DebitTransfer"/>' +
+						'<semantic:message name="OAGIS:[DebitTransfer]" id="_1373552137499" itemRef="process:DebitTransferItem"/>' +
+						'<semantic:collaboration id="C1373552137507">' +
+							'<semantic:participant name="From" id="_b550f52a-28c4-4546-aadd-3e40cb8a2e71"/>' +
+							'<semantic:participant name="To" id="_1173de42-394d-4480-8204-c884675b5fd9"/>' +
+							'<semantic:messageFlow messageRef="process:_1373552137499" name="Debit Transfer " sourceRef="_b550f52a-28c4-4546-aadd-3e40cb8a2e71" targetRef="_1173de42-394d-4480-8204-c884675b5fd9" id="_c9d253d8-c69c-47c3-9d64-7e9deeaf6654"/>' +
+						'</semantic:collaboration>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['DebitTransferItem']);
+			ok(validator.result.items['DebitTransferItem'].oagis);
+			ok(validator.result.items['DebitTransferItem'].valid);
+			equal(validator.result.items['DebitTransferItem'].type, 'noun');
+			equal(validator.result.items['DebitTransferItem'].element, 'DebitTransfer');
+
+
+			ok(validator.result.messages['_1373552137499']);
+			ok(validator.result.messages['_1373552137499'].oagis);
+			ok(validator.result.messages['_1373552137499'].defined);
+			ok(!validator.result.messages['_1373552137499'].valid);
+			equal(validator.result.messages['_1373552137499'].item, validator.result.items['DebitTransferItem']);
+
+		});		
+		module('Undefined Message', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:message name="Undefined" id="_1373552137499"/>' +
+						'<semantic:collaboration id="C1373552137507">' +
+							'<semantic:participant name="From" id="_b550f52a-28c4-4546-aadd-3e40cb8a2e71"/>' +
+							'<semantic:participant name="To" id="_1173de42-394d-4480-8204-c884675b5fd9"/>' +
+							'<semantic:messageFlow messageRef="process:_1373552137499" name="Undefined Message" sourceRef="_b550f52a-28c4-4546-aadd-3e40cb8a2e71" targetRef="_1173de42-394d-4480-8204-c884675b5fd9" id="_c9d253d8-c69c-47c3-9d64-7e9deeaf6654"/>' +
+						'</semantic:collaboration>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			equal(0, Object.keys(validator.result.items).length);
+			ok(validator.result.messages['_1373552137499']);
+			ok(!validator.result.messages['_1373552137499'].oagis);
+			ok(!validator.result.messages['_1373552137499'].defined);
+
+		});		
+		module('No definitions', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:collaboration id="C1373552137507">' +
+							'<semantic:participant name="From" id="_b550f52a-28c4-4546-aadd-3e40cb8a2e71"/>' +
+							'<semantic:participant name="To" id="_1173de42-394d-4480-8204-c884675b5fd9"/>' +
+						'</semantic:collaboration>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		
+		test("Results", function() {
+			validator.validate();
+			equal(0, Object.keys(validator.result.items).length);
+			equal(0, Object.keys(validator.result.messages).length);
+		});
+		
+		module('Data Object Simple', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="DebitTransferItem" structureRef="oagis:DebitTransfer"/>' +
+						'<semantic:process isExecutable="false" id="WFP">' +
+							'<semantic:dataObject name="OAGIS:[DebitTransfer]" id="_1373552137499" itemSubjectRef="process:DebitTransferItem"/>' +						
+						'</semantic:process>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['DebitTransferItem']);
+			ok(validator.result.items['DebitTransferItem'].oagis);
+			ok(validator.result.items['DebitTransferItem'].valid);
+			equal(validator.result.items['DebitTransferItem'].type, 'noun');
+			equal(validator.result.items['DebitTransferItem'].element, 'DebitTransfer');
+
+
+			ok(validator.result.dataobjects['_1373552137499']);
+			ok(validator.result.dataobjects['_1373552137499'].oagis);
+			ok(validator.result.dataobjects['_1373552137499'].defined);
+			ok(validator.result.dataobjects['_1373552137499'].valid);			
+			equal(validator.result.dataobjects['_1373552137499'].item, validator.result.items['DebitTransferItem']);
+
+		});
+		
+		module('Data Object no namespace prefix', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<itemDefinition id="DebitTransferItem" structureRef="oagis:DebitTransfer"/>' +
+						'<process isExecutable="false" id="WFP">' +
+							'<dataObject name="OAGIS:[DebitTransfer]" id="_1373552137499" itemSubjectRef="process:DebitTransferItem"/>' +						
+						'</process>' +
+					'</definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['DebitTransferItem']);
+			ok(validator.result.items['DebitTransferItem'].oagis);
+			ok(validator.result.items['DebitTransferItem'].valid);
+			equal(validator.result.items['DebitTransferItem'].type, 'noun');
+			equal(validator.result.items['DebitTransferItem'].element, 'DebitTransfer');
+
+
+			ok(validator.result.dataobjects['_1373552137499']);
+			ok(validator.result.dataobjects['_1373552137499'].oagis);
+			ok(validator.result.dataobjects['_1373552137499'].defined);
+			ok(validator.result.dataobjects['_1373552137499'].valid);			
+			equal(validator.result.dataobjects['_1373552137499'].item, validator.result.items['DebitTransferItem']);
+
+		});
+
+		module('Data Store Simple', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="DebitTransferItem" structureRef="oagis:DebitTransfer"/>' +
+						'<semantic:dataStore name="OAGIS:[DebitTransfer]" id="_1373552137499" itemSubjectRef="process:DebitTransferItem"/>' +						
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['DebitTransferItem']);
+			ok(validator.result.items['DebitTransferItem'].oagis);
+			ok(validator.result.items['DebitTransferItem'].valid);
+			equal(validator.result.items['DebitTransferItem'].type, 'noun');
+			equal(validator.result.items['DebitTransferItem'].element, 'DebitTransfer');
+
+
+			ok(validator.result.datastores['_1373552137499']);
+			ok(validator.result.datastores['_1373552137499'].oagis);
+			ok(validator.result.datastores['_1373552137499'].defined);
+			ok(validator.result.datastores['_1373552137499'].valid);			
+			equal(validator.result.datastores['_1373552137499'].item, validator.result.items['DebitTransferItem']);
+
+		});
+
+		module('Data Store Local Namespace', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="DebitTransferItem" structureRef="DebitTransfer" xmlns="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:dataStore name="OAGIS:[DebitTransfer]" id="_1373552137499" itemSubjectRef="process:DebitTransferItem"/>' +						
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['DebitTransferItem']);
+			ok(validator.result.items['DebitTransferItem'].oagis);
+			ok(validator.result.items['DebitTransferItem'].valid);
+			equal(validator.result.items['DebitTransferItem'].type, 'noun');
+			equal(validator.result.items['DebitTransferItem'].element, 'DebitTransfer');
+
+
+			ok(validator.result.datastores['_1373552137499']);
+			ok(validator.result.datastores['_1373552137499'].oagis);
+			ok(validator.result.datastores['_1373552137499'].defined);
+			ok(validator.result.datastores['_1373552137499'].valid);			
+			equal(validator.result.datastores['_1373552137499'].item, validator.result.items['DebitTransferItem']);
+
+		});
+		
+		
+		module('Data Store Undefined Reference', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:dataStore name="OAGIS:[DebitTransfer]" id="_1373552137499" />' +						
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+
+			ok(validator.result.datastores['_1373552137499']);
+			ok(!validator.result.datastores['_1373552137499'].oagis);
+			ok(!validator.result.datastores['_1373552137499'].defined);
+
+		});
+		
+		module('Multiple Data References', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="DebitTransferItem" structureRef="oagis:DebitTransfer"/>' +
+						'<semantic:itemDefinition id="CreditStatusItem" structureRef="oagis:CreditStatus"/>' +
+						'<semantic:dataStore name="OAGIS:[DebitTransfer]" id="DebitTransferDS" itemSubjectRef="process:DebitTransferItem"/>' +						
+						'<semantic:dataStore name="OAGIS:[CreditStatus]" id="CreditStatusDS" itemSubjectRef="process:CreditStatusItem"/>' +						
+						'<semantic:process isExecutable="false" id="WFP">' +
+							'<semantic:dataObject name="OAGIS:[DebitTransfer]" id="DebitTransferDO" itemSubjectRef="process:DebitTransferItem"/>' +						
+						'</semantic:process>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['DebitTransferItem']);
+			ok(validator.result.items['CreditStatusItem']);
+			equal(Object.keys(validator.result.items).length,2);
+			equal(Object.keys(validator.result.datastores).length, 2);
+			equal(Object.keys(validator.result.dataobjects).length, 1);
+
+		});
+
+		module('Data Input', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="CreditStatusItem" structureRef="oagis:CreditStatus"/>' +
+						'<semantic:process isExecutable="false" id="WFP-6-">' +
+							'<semantic:ioSpecification>' +
+								'<semantic:dataInput name="" id="_e503cdd1-3519-4d75-a2c8-dd144e6c2786" itemSubjectRef="process:CreditStatusItem"/>' +
+								'<semantic:inputSet>' +
+									'<semantic:dataInputRefs>_e503cdd1-3519-4d75-a2c8-dd144e6c2786</semantic:dataInputRefs>' +
+								'</semantic:inputSet>' +
+								'<semantic:outputSet/>' +
+							'</semantic:ioSpecification>' +
+						'</semantic:process>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['CreditStatusItem']);
+			ok(validator.result.items['CreditStatusItem'].oagis);
+			ok(validator.result.items['CreditStatusItem'].valid);
+			equal(validator.result.items['CreditStatusItem'].type, 'noun');
+			equal(validator.result.items['CreditStatusItem'].element, 'CreditStatus');
+
+
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786']);
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].oagis);
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].defined);
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].valid);			
+			equal(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].item, validator.result.items['CreditStatusItem']);
+
+		});
+
+		module('Data Output', {
+			setup: function() {
+				var xml = $.parseXML(
+					'<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+						'<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>' +
+						'<semantic:itemDefinition id="CreditStatusItem" structureRef="oagis:CreditStatus"/>' +
+						'<semantic:process isExecutable="false" id="WFP-6-">' +
+							'<semantic:ioSpecification>' +
+								'<semantic:dataOutput name="" id="_e503cdd1-3519-4d75-a2c8-dd144e6c2786" itemSubjectRef="process:CreditStatusItem"/>' +
+								'<semantic:inputSet/>' +
+								'<semantic:outputSet>' +
+									'<semantic:dataOutputRefs>_e503cdd1-3519-4d75-a2c8-dd144e6c2786</semantic:dataOutputRefs>' +
+								'</semantic:outputSet>' +
+							'</semantic:ioSpecification>' +
+						'</semantic:process>' +
+					'</semantic:definitions>');
+				validator = new OAGISBPMNValidator(xml);
+			}
+		});
+		test("Results", function(){
+			validator.validate();
+			ok(validator.result.items['CreditStatusItem']);
+			ok(validator.result.items['CreditStatusItem'].oagis);
+			ok(validator.result.items['CreditStatusItem'].valid);
+			equal(validator.result.items['CreditStatusItem'].type, 'noun');
+			equal(validator.result.items['CreditStatusItem'].element, 'CreditStatus');
+
+
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786']);
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].oagis);
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].defined);
+			ok(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].valid);			
+			equal(validator.result.dataobjects['_e503cdd1-3519-4d75-a2c8-dd144e6c2786'].item, validator.result.items['CreditStatusItem']);
+
+		});
+				
+		
+	</script>
+  </body>
+</html>

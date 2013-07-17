@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OAGIS BPMN 2.0 Validator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">	
+	<link href="css/validator.css" rel="stylesheet">	
+  </head>
+  <body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container"> 
+				<a class="brand" href="">OAGIS BPMN 2.0 Validator</a>
+			</div>
+		</div>	
+	</div>
+	<div class="container">
+		<script type="text/javascript">
+			if (!window.File || !window.FileReader ||!window.FileList || !window.Blob) {
+				document.write('<div class="alert alert-error">');
+				document.write('<button type="button" class="close" data-dismiss="alert">&times;</button>');
+				document.write('<strong>Error!</strong> You need an HTML5 browser to use this validator: IE 10+, Firefox 4+, Chrome 6+, Safari 6+, Opera 11.1+');
+				document.write('</div>');
+			}
+		</script>
+		<h3>OAGIS BPMN 2.0 Validator</h3>
+		<p>
+			To use the validator, simply choose a BPMN 2.0 XML file from your computer. 
+			This service will validate that your BPMN Messages, Data Objects and Data Stores are defined as valid OAGIS BODs (messages) or Nouns (data objects/stores).
+		</p>
+		<p>
+			The BPMN 2.0 file must be defined using the <i>http://www.omg.org/spec/BPMN/20100524/MODEL</i> namespace and your BPMN 2.0 Item Definitions need to be defined according to the OAGIS 9.6 namespace <i>http://www.openapplications.org/oagis/9</i>.			
+		</p>
+		<p style="margin-top:2em;margin-bottom:2em;text-align:center">
+			Select a BPMN 2.0 XML File <i class="icon-file"></i><br><input type="file" id="file" name="file" size="100"/>
+		</p>
+		<h3 class="validation-results">Validation Results <i id="file-result"></i></h3>
+		<p id="validation-message" class="validation-results"></p>
+			
+		<div class="row-fluid validation-results">
+			<div id="messages" class="span4 results-holder">
+				<h3>Messages <span class="count"></span></h3>
+				<ul class="results">
+				</ul>
+			</div>
+			<div id="dataobjects" class="span4 results-holder">
+				<h3>Data Objects <span class="count"></span></h3>
+				<ul class="results">
+				</ul>
+			</div>
+			<div id="datastores" class="span4 results-holder">
+				<h3>Data Stores <span class="count"></span></h3>
+				<ul class="results">
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="navbar navbar-inverse navbar-fixed-bottom">
+		<div class="navbar-inner">
+			<div class="container"> 
+				<ul class="nav">
+					<li><a href="http://www.oagi.org/dnn2/DownloadsandResources/OAGIS961PublicDownloadPage.aspx">Open Application Group OAGIS</a></li>
+					<li><a href="http://www.bpmn.org">BPMN 2.0</a></li>
+				</ul>
+			</div>
+		</div>	
+	</div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+	<script src="../js/oagis-bpmn-validator.js"></script>
+	<script type="text/javascript">
+		$('#file').change(function(e){
+			$('.validation-results').hide();
+			$('div.results-holder ul li').remove();
+			var files = e.target.files;
+			if(files.length == 1){
+				var file = e.target.files[0];
+				var reader = new FileReader();
+				reader.onload = function (e) {
+					var xml;
+					//Read the XML file
+					try {
+						xml = $.parseXML(e.target.result);
+					} catch (e)  {
+						$('#validation-message').html('<i class="icon-remove"></i><b> Could not parse the XML content of the file.');		
+						$('.validation-results').show();						
+						return;
+					}
+					//Instantiate the validator and validate
+					var validator = new OAGISBPMNValidator(xml);
+					validator.validate();
+					
+					//Display the results
+					displayResults(validator.result.messages, $('#messages'));
+					displayResults(validator.result.dataobjects, $('#dataobjects'));
+					displayResults(validator.result.datastores, $('#datastores'));
+					
+					//Determine the validation global result
+					if( $('div.results-holder ul li.error').length > 0) {
+						$('#file-result').attr('class','icon-remove');
+						$('#validation-message').html('The file you have validated contains invalid OAGIS definitions.');
+					} else if( $('div.results-holder ul li.warn').length > 0) {
+						$('#file-result').attr('class','icon-warning-sign');
+						$('#validation-message').html('The file you have validated contains warnings.');
+					} else if( $('div.results-holder ul li.ok').length > 0) {
+						$('#file-result').attr('class','icon-ok');
+						$('#validation-message').html('The file you have validated contains only Messages, Data Objects and Data Stores defined using OAGIS BODs and Nouns.');
+					} else {
+						$('#file-result').attr('class','icon-question');
+						$('#validation-message').html('The file you have validated does not contain Messages, Data Objects or Data Stores.');
+					}
+					
+					//Check for the namespace used in the file
+					if('http://www.omg.org/spec/BPMN/20100524/MODEL' != validator.result.bpmnns){
+						$('#validation-message').append('<br><b>You may encounter some issues with the BPMN File as its defined in a different namespace than BPMN 2.0: '  + validator.result.bpmnns + '</b>');					
+					}
+					
+					//Add mouseover explainations
+					$('.popup').popover({
+						placement: 'top',
+						trigger: 'hover',
+						html: 'true'
+					});
+					
+					//Display the results
+					$('.validation-results').show();
+				};
+				reader.readAsText(file);
+				
+				function displayResults(source, target) {
+					var count = 0;
+					$.each(source, function () {
+						count = count + 1;
+						if(this.oagis && this.valid) {					
+							target.find('ul.results').append('<li class="ok popup" data-content="<b>' + this.label + '</b> is correctly defined in the OAGIS namespace on <b>'+ this.item.element +'</b>"><i class="icon-ok"></i>' + this.label + '</li>');
+						} else if(this.oagis && !this.valid){
+							target.find('ul.results').append('<li class="error popup" data-content="<b>' + this.label + '</b> reference an invalid OAGIS namespace element <b>'+ this.item.element +'</b>"><i class="icon-remove"></i> ' + this.label + '</li>');
+						} else if(!this.oagis && this.defined) {
+							target.find('ul.results').append('<li class="warn popup" data-content="<b>' + this.label + '</b> reference an item in a non OAGIS namespace <b>'+ this.item.element +'</b>"><i class="icon-warning-sign"></i> ' + this.label + '</li>');
+						} else if(!this.oagis && !this.defined) {
+							target.find('ul.results').append('<li class="warn popup" data-content="<b>' + this.label + '</b> is not defined"><i class="icon-warning-sign"></i> ' + this.label + '</li>');
+						}
+					});
+					target.find('span.count').html('(' + count + ')');
+				}
+			}
+		});
+	</script>
+  </body>
+</html>

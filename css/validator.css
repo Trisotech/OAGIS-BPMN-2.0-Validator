@@ -1,0 +1,41 @@
+/* compensate for the fixed top navbar on wide screens */
+@media (min-width: 979px) {
+	body {
+		margin-top: 60px;
+		margin-bottom: 60px;
+	}
+}
+.validation-results {
+	display:none;
+}
+div.results-holder {
+	list-style-type: none;
+	border-color:#ddd;
+	border-radius:4px;
+	border-style:solid;
+	border-width:2px;
+	padding: 0px 1em 1em 1em;
+	margin-bottom: 1em;
+}
+
+div.results-holder  ul {
+	list-style-type: none;
+	margin: 0px 0px 0px 0px;	
+}
+
+div.results-holder  ul  li{
+	cursor: pointer;
+}
+
+.icon-ok {
+	font-size:1.2em;
+	color:#51a351;
+}
+.icon-warning-sign, .icon-question {
+	font-size:1.2em;
+	color:#f89406;
+}
+.icon-remove {
+	font-size:1.2em;
+	color:#bd362f;
+}

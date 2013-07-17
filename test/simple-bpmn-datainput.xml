@@ -1,0 +1,13 @@
+<semantic:definitions id="_1373552137482" name="Drawing1" targetNamespace="http://www.trisotech.com/definitions/_1373552137482" xmlns:oagis="http://www.openapplications.org/oagis/9" xmlns:process="http://www.trisotech.com/definitions/_1373552137482" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:semantic="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<semantic:import namespace="http://www.openapplications.org/oagis/9" importType="http://www.w3.org/2001/XMLSchema" location="http://www.openapplications.org/oagis/9"/>
+	<semantic:itemDefinition id="CreditStatusItem" structureRef="oagis:CreditStatus"/>
+	<semantic:process isExecutable="false" id="WFP-6-">
+		<semantic:ioSpecification>
+			<semantic:dataInput name="" id="_e503cdd1-3519-4d75-a2c8-dd144e6c2786" itemSubjectRef="process:CreditStatusItem"/>
+			<semantic:inputSet>
+				<semantic:dataInputRefs>_e503cdd1-3519-4d75-a2c8-dd144e6c2786</semantic:dataInputRefs>
+			</semantic:inputSet>
+			<semantic:outputSet/>
+		</semantic:ioSpecification>
+	</semantic:process>
+</semantic:definitions>
